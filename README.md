@@ -9,7 +9,7 @@ Detect plagiarism in text documents using AI-based techniques, leveraging the MI
 
 ## 📂 Dataset
 MIT Plagiarism Detection Dataset (from Kaggle)  
-Converted `.act` files to `.csv` for processing.
+Converted `.txt` files to `.csv` for processing.
 
 ## 🛠️ Tech Stack
 - Python
