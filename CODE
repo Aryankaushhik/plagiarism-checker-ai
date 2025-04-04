@@ -1,0 +1,79 @@
+import pandas as pd
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Step 1: Load CSV without headers
+df = pd.read_csv("train_snli.csv", header=None)
+
+# Step 2: Assign meaningful column names
+df.columns = ['Text1', 'Text2', 'Label']  # You can ignore 'Label' if not needed
+
+# Step 3: Convert to string
+texts = df[['Text1', 'Text2']].astype(str)
+
+# Step 4: Initialize TF-IDF
+vectorizer = TfidfVectorizer()
+combined_texts = texts['Text1'].tolist() + texts['Text2'].tolist()
+vectorizer.fit(combined_texts)
+
+# Step 5: Transform text
+tfidf_1 = vectorizer.transform(texts['Text1'])
+tfidf_2 = vectorizer.transform(texts['Text2'])
+
+# Step 6: Compute similarity
+similarity_scores = []
+for i in range(len(df)):
+    sim = cosine_similarity(tfidf_1[i], tfidf_2[i])[0][0]
+    similarity_scores.append(sim)
+
+# Step 7: Add scores to dataframe
+df['Plagiarism_Score'] = similarity_scores
+df['Plagiarism_%'] = (df['Plagiarism_Score'] * 100).round(2)
+
+# Step 8: Show top 10 results
+print(df[['Text1', 'Text2', 'Plagiarism_%']].head(10))
+
+# Step 9: Optional - Save results
+df.to_csv("plagiarism_results.csv", index=False)
+print("\n✅ Results saved to plagiarism_results.csv")
+
+
+# Step 6: Transform both text columns
+tfidf_1 = vectorizer.transform(texts['Text1'])
+tfidf_2 = vectorizer.transform(texts['Text2'])
+
+# Step 7: Calculate cosine similarity for each pair
+similarity_scores = []
+for i in range(len(df)):
+    sim = cosine_similarity(tfidf_1[i], tfidf_2[i])[0][0]
+    similarity_scores.append(sim)
+
+# Step 8: Add similarity scores to DataFrame
+df['Plagiarism_Score'] = similarity_scores
+df['Plagiarism_%'] = (df['Plagiarism_Score'] * 100).round(2)
+
+# Step 9: Display the top 10 comparisons
+print(df[['Text1', 'Text2', 'Plagiarism_%']].head(10))
+
+# Step 10: Optional - Save results to a new CSV
+df.to_csv("plagiarism_results.csv", index=False)
+print("\n✅ Results saved to plagiarism_results.csv")
+
+# Load the results back (just in case)
+results = pd.read_csv("plagiarism_results.csv")
+
+# Convert Plagiarism_% to numeric (if it's not already)
+results['Plagiarism_%'] = pd.to_numeric(results['Plagiarism_%'], errors='coerce')
+
+# Summary stats
+highly_similar = results[results['Plagiarism_%'] >= 80]
+average_score = results['Plagiarism_%'].mean()
+
+print(f"\nTotal pairs: {len(results)}")
+print(f"Pairs with >= 80% similarity: {len(highly_similar)}")
+print(f"Average Plagiarism Score: {average_score:.2f}%")
+
+# Save filtered results (optional)
+highly_similar.to_csv("highly_plagiarized.csv", index=False)
+print("Filtered high similarity pairs saved to 'highly_plagiarized.csv'")
